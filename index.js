@@ -9,17 +9,16 @@ logManager.createRollingFileAppender({
 })
 const logger = logManager.createLogger()
 
-// const Trejo = require('@4lch4/trejo')
-// const trejo = new Trejo({
-//   apiKey: config.apiKey,
-//   apiToken: config.apiToken
-// })
-
-const Trejo = require('../Trejo-ts')
+const Trejo = require('@4lch4/trejo')
 const trejo = new Trejo({
   apiKey: apiKey,
   apiToken: apiToken
 })
+
+const Checklists = trejo.checklists()
+const Members = trejo.members()
+const Boards = trejo.boards()
+const Cards = trejo.cards()
 
 const CheckItems = [
   { name: 'Check Teams', pos: '1' },
@@ -36,7 +35,7 @@ const getListByName = (name, lists) => {
 }
 
 const createCard = async listId => {
-  return trejo.cards().createCard({
+  return Cards.createCard({
     idList: listId,
     name: 'Daily Tasks',
     desc: 'Things I should do every day.',
@@ -45,28 +44,33 @@ const createCard = async listId => {
 }
 
 const createChecklistAndItems = async cardId => {
-  const newCheckList = await trejo.checklists().createChecklist({
+  const newCheckList = await Checklists.createChecklist({
     idCard: cardId,
     name: 'Daily Tasks',
     pos: 'top'
   })
 
   for (const checkItem of CheckItems) {
-    await trejo.checklists().createChecklistCheckItem(newCheckList.id, checkItem)
+    await Checklists.createChecklistCheckItem(newCheckList.id, checkItem)
   }
 
   return newCheckList
 }
 
+const MajorLabel = boardId => {
+  return { color: 'orange', name: 'Major', idBoard: boardId }
+}
+
 const main = async () => {
   try {
-    const board = await trejo.members().getBoardByName('J. B. Hunt')
+    const board = await Members.getBoardByName('J. B. Hunt')
 
-    const lists = await trejo.boards().getBoardLists(board.id)
+    const lists = await Boards.getBoardLists(board.id)
     const list = getListByName('Doing', lists)
 
-    // const newCard = await createCard(list.id)
-    // const newCheckList = await createChecklistAndItems(newCard.id)
+    const newCard = await createCard(list.id)
+    const majorLabel = await Cards.addNewCardLabel(newCard.id, MajorLabel(board.id))
+    const newCheckList = await createChecklistAndItems(newCard.id)
   } catch (err) { logger.error(err) }
 }
 
@@ -74,5 +78,3 @@ main().then(res => {
   logger.info('Complete!')
   if (res) logger.info(res)
 }).catch(err => logger.error(err))
-// const qString = require('querystring')
-// console.log(qString.stringify({ foo: 'bar', baz: ['qux', 'quux'], corge: '' }))
