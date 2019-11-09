@@ -1,4 +1,13 @@
 const { apiKey, apiToken } = require('./config')
+const Logger = require('simple-node-logger')
+const logManager = new Logger()
+logManager.createConsoleAppender()
+logManager.createRollingFileAppender({
+  logDirectory: './logs',
+  fileNamePattern: 'roll-<DATE>.log',
+  dateFormat: 'YYYY.MM.DD'
+})
+const logger = logManager.createLogger()
 
 // const Trejo = require('@4lch4/trejo')
 // const trejo = new Trejo({
@@ -6,11 +15,17 @@ const { apiKey, apiToken } = require('./config')
 //   apiToken: config.apiToken
 // })
 
-const Trejo = require('@4lch4/trejo')
+const Trejo = require('../Trejo-ts')
 const trejo = new Trejo({
   apiKey: apiKey,
   apiToken: apiToken
 })
+
+const CheckItems = [
+  { name: 'Check Teams', pos: '1' },
+  { name: 'Check E-Mail', pos: '2' },
+  { name: 'I \'unno...', pos: '3' }
+]
 
 const getListByName = (name, lists) => {
   for (const list of lists) {
@@ -31,49 +46,33 @@ const createCard = async listId => {
 
 const createChecklistAndItems = async cardId => {
   const newCheckList = await trejo.checklists().createChecklist({
-    idCard: newCard.id,
+    idCard: cardId,
     name: 'Daily Tasks',
     pos: 'top'
   })
 
-  const checkItemA = await trejo.checklists().createChecklistCheckItem(newCheckList.id, {
-    name: 'Check Teams',
-    pos: '1'
-  })
+  for (const checkItem of CheckItems) {
+    await trejo.checklists().createChecklistCheckItem(newCheckList.id, checkItem)
+  }
 
-  const checkItemB = await trejo.checklists().createChecklistCheckItem(newCheckList.id, {
-    name: 'Check Email',
-    pos: '2'
-  })
-
-  const checkItemC = await trejo.checklists().createChecklistCheckItem(newCheckList.id, {
-    name: 'Just a test',
-    pos: '3'
-  })
-
+  return newCheckList
 }
 
 const main = async () => {
   try {
     const board = await trejo.members().getBoardByName('J. B. Hunt')
 
-    console.log('board...')
-    console.log(board)
-
     const lists = await trejo.boards().getBoardLists(board.id)
     const list = getListByName('Doing', lists)
 
-    // trejo
-
-
-    const newCard = await createCard(list.id)
-    const newCheckList = await createChecklistAndItems(newCard.id)
-  } catch (err) { console.error(err) }
+    // const newCard = await createCard(list.id)
+    // const newCheckList = await createChecklistAndItems(newCard.id)
+  } catch (err) { logger.error(err) }
 }
 
 main().then(res => {
-  console.log('Complete!')
-  console.log(res)
-}).catch(console.error)
+  logger.info('Complete!')
+  if (res) logger.info(res)
+}).catch(err => logger.error(err))
 // const qString = require('querystring')
 // console.log(qString.stringify({ foo: 'bar', baz: ['qux', 'quux'], corge: '' }))
