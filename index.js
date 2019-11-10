@@ -9,6 +9,8 @@ logManager.createRollingFileAppender({
 })
 const logger = logManager.createLogger()
 
+const Scheduler = require('node-schedule')
+
 const Trejo = require('@4lch4/trejo')
 const trejo = new Trejo({
   apiKey: apiKey,
@@ -74,7 +76,11 @@ const main = async () => {
   } catch (err) { logger.error(err) }
 }
 
-main().then(res => {
-  logger.info('Complete!')
-  if (res) logger.info(res)
-}).catch(err => logger.error(err))
+Scheduler.scheduleJob('Trejo nightly tasks.', '0 0 17 * * 3,4,5,6', fireTime => {
+  console.log(`fireTime = ${fireTime}`)
+  main().then(res => {
+    logger.info(`fireTime = ${fireTime}`)
+    logger.info('Complete!')
+    if (res) logger.info(res)
+  }).catch(err => logger.error(err))
+})
