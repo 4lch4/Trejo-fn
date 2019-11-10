@@ -1,6 +1,6 @@
 {
   "name": "@4lch4/trejo",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A small Trello utility.",
   "main": "index.js",
   "scripts": {
