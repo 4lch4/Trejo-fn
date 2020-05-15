@@ -19,7 +19,7 @@
     "simple-node-logger": "^18.12.23"
   },
   "devDependencies": {
-    "nodemon": "1.19.4",
+    "nodemon": "2.0.4",
     "standard": "14.3.1"
   }
 }
